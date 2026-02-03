@@ -28,11 +28,26 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build
+    - name: Get version name
+      id: version
+      run: |
+        if [ "${{ github.ref_type }}" == "tag" ]; then
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        else
+          VERSION=$(grep versionName app/build.gradle | sed 's/.*"\(.*\)".*/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        fi
+    - name: Rename APK for release
+      if: github.ref_type == 'tag' || github.event_name == 'release'
+      run: |
+        cp app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/scan-to-paperless-${{ steps.version.outputs.VERSION }}.apk
     - name: Upload APK
       uses: actions/upload-artifact@v6
       with:
         name: app-release
-        path: app/build/outputs/apk/release/app-release-unsigned.apk
+        path: |
+          app/build/outputs/apk/release/app-release-unsigned.apk
+          app/build/outputs/apk/release/scan-to-paperless-*.apk
         if-no-files-found: error
     - name: Download APK
       uses: actions/download-artifact@v7
