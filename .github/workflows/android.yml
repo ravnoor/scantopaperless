@@ -45,9 +45,14 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: app-release
-        path: |
-          app/build/outputs/apk/release/app-release-unsigned.apk
-          app/build/outputs/apk/release/scan-to-paperless-*.apk
+        path: app/build/outputs/apk/release/app-release-unsigned.apk
+        if-no-files-found: error
+    - name: Upload renamed APK
+      if: github.ref_type == 'tag' || github.event_name == 'release'
+      uses: actions/upload-artifact@v6
+      with:
+        name: scan-to-paperless-${{ steps.version.outputs.VERSION }}
+        path: app/build/outputs/apk/release/scan-to-paperless-${{ steps.version.outputs.VERSION }}.apk
         if-no-files-found: error
     - name: Download APK
       uses: actions/download-artifact@v7
