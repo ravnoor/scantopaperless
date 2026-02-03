@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
             return "file_" + timestamp + ".pdf";
         } else {
             // Remove .pdf extension if user added it
-            if (customName.toLowerCase().endsWith(".pdf")) {
+            if (customName.toLowerCase(Locale.US).endsWith(".pdf")) {
                 customName = customName.substring(0, customName.length() - 4);
             }
             return customName + "_" + timestamp + ".pdf";
