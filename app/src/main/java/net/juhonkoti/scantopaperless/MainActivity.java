@@ -28,6 +28,9 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -41,7 +44,7 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
-    private EditText etUrl, etToken;
+    private EditText etUrl, etToken, etFilename;
     private Button btnScan;
     private TextView textDebug;
     private ActivityResultLauncher<IntentSenderRequest> scannerLauncher;
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "ScanToPaperlessPrefs";
     private static final String KEY_URL = "url";
     private static final String KEY_TOKEN = "token";
+    private static final String KEY_FILENAME = "filename";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
         etUrl = findViewById(R.id.etUrl);
         etToken = findViewById(R.id.etToken);
+        etFilename = findViewById(R.id.etFilename);
         btnScan = findViewById(R.id.btnScan);
         textDebug = findViewById(R.id.textDebug);
 
@@ -77,6 +82,8 @@ public class MainActivity extends AppCompatActivity {
         etUrl.setText(savedUrl);
         String savedToken = prefs.getString(KEY_TOKEN, "");
         etToken.setText(savedToken);
+        String savedFilename = prefs.getString(KEY_FILENAME, "");
+        etFilename.setText(savedFilename);
 
         if (savedUrl.equals("https://") || savedToken.equals("") || true) {
             textDebug.setText("Welcome!\nSet your paperless-ngx hostname to the url field. Example value: \"https://paperless.foobar.com\".\n\n" +
@@ -96,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
         etUrl.addTextChangedListener(watcher);
         etToken.addTextChangedListener(watcher);
+        etFilename.addTextChangedListener(watcher);
 
         // 1) Prepare ML Kit scanner launcher
         GmsDocumentScannerOptions options = new GmsDocumentScannerOptions.Builder()
@@ -159,10 +167,29 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = prefs.edit();
         String url = etUrl.getText().toString();
         String token = etToken.getText().toString();
+        String filename = etFilename.getText().toString();
         editor.putString(KEY_URL, url);
         editor.putString(KEY_TOKEN, token);
+        editor.putString(KEY_FILENAME, filename);
         Log.d(TAG, "saveSettings called: " + url + " and " + token);
         editor.commit();
+    }
+
+    // Generate filename with timestamp
+    private String generateFilename() {
+        String customName = etFilename.getText().toString().trim();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US);
+        String timestamp = dateFormat.format(new Date());
+        
+        if (customName.isEmpty()) {
+            return "file_" + timestamp + ".pdf";
+        } else {
+            // Remove .pdf extension if user added it
+            if (customName.toLowerCase().endsWith(".pdf")) {
+                customName = customName.substring(0, customName.length() - 4);
+            }
+            return customName + "_" + timestamp + ".pdf";
+        }
     }
 
     // Read the PDF from its content URI and POST it
@@ -177,10 +204,11 @@ public class MainActivity extends AppCompatActivity {
             in.read(pdfBytes);
 
             // Create multipart form body
+            String filename = generateFilename();
             RequestBody pdfRequestBody = RequestBody.create(pdfBytes, MediaType.parse("application/pdf"));
             MultipartBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
-                    .addFormDataPart("document", "file.pdf", pdfRequestBody) // "document" is the form field name
+                    .addFormDataPart("document", filename, pdfRequestBody) // "document" is the form field name
                     .build();
 
             Request request = new Request.Builder()
