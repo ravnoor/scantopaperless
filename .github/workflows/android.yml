@@ -54,6 +54,11 @@ jobs:
         name: scan-to-paperless-${{ steps.version.outputs.VERSION }}
         path: app/build/outputs/apk/release/scan-to-paperless-${{ steps.version.outputs.VERSION }}.apk
         if-no-files-found: error
+    - name: Upload APK to Release
+      if: github.ref_type == 'tag'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: app/build/outputs/apk/release/scan-to-paperless-${{ steps.version.outputs.VERSION }}.apk
     - name: Download APK
       uses: actions/download-artifact@v7
       with:
