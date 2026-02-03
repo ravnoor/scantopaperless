@@ -43,6 +43,7 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final SimpleDateFormat FILENAME_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US);
 
     private EditText etUrl, etToken, etFilename;
     private Button btnScan;
@@ -178,8 +179,7 @@ public class MainActivity extends AppCompatActivity {
     // Generate filename with timestamp
     private String generateFilename() {
         String customName = etFilename.getText().toString().trim();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US);
-        String timestamp = dateFormat.format(new Date());
+        String timestamp = FILENAME_DATE_FORMAT.format(new Date());
         
         if (customName.isEmpty()) {
             return "file_" + timestamp + ".pdf";

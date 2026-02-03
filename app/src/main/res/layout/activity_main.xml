@@ -38,7 +38,7 @@
         android:inputType="textPassword" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/tvFilenameLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="File name (optional, timestamp will be added)" />
